@@ -172,7 +172,7 @@ class MixedInputSeqModel(nn.Module):
         x = self.outp(x)
         if not self.is_reg:
             if self.is_multi:
-                x = F.sigmoid(x)
+                x = torch.sigmoid(x)
             else:
                 x = F.log_softmax(x)
         elif self.y_range:
