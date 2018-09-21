@@ -138,6 +138,8 @@ class MixedInputSeqModel(nn.Module):
                          num_layers=lstm_num_layers, dropout=lstm_dropout,
                          batch_first=True)
 
+        self.lstm_drop = nn.Dropout(lstm_dropout)
+
         # Output weights.
         self.outp = nn.Linear(lstm_hidden_size, out_sz)
         kaiming_normal(self.outp.weight.data)
@@ -169,6 +171,7 @@ class MixedInputSeqModel(nn.Module):
             if self.use_bn: x = b(x)
             x = d(x)
         x, _ = self.lstm(x)
+        x = self.lstm_drop(x)
         x = self.outp(x)
         if not self.is_reg:
             if self.is_multi:
