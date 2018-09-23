@@ -35,12 +35,14 @@ class ColumnarSeqDataset(Dataset):
         self.is_reg = is_reg
         self.is_multi = is_multi
 
+        self.y_nan = np.asarray([[np.nan]]*12, dtype=np.float32)
+
     def __len__(self): return len(self.seqs_lim) - 1
 
     def __getitem__(self, idx):
         beg = self.seqs_lim[idx]
-        end = self.seqs_lim[idx + 1]
-        return [self.cats[beg:end], self.conts[beg:end], self.y[beg:end]]
+        end = beg + 12
+        return [self.cats[beg - 12:end], self.conts[beg - 12:end], np.concatenate((self.y_nan, self.y[beg:end]))]
 
     @classmethod
     def from_data_frames(cls, seqs_lim, df_cat, df_cont, y=None, is_reg=True, is_multi=False):
@@ -184,20 +186,25 @@ class MixedInputSeqModel(nn.Module):
             x = x+self.y_range[0]
         return x
 
+def mse_loss_nan(input, target):
+    # Mask out nan values.
+    m = torch.isnan(target) ^ 1
+    return F.mse_loss(torch.masked_select(input, m), torch.masked_select(target, m))
+
 
 class StructuredSeqLearner(Learner):
     def __init__(self, data, models, **kwargs):
         super().__init__(data, models, **kwargs)
 
     def _get_crit(self, data):
-        return F.mse_loss if data.is_reg else F.binary_cross_entropy if data.is_multi else F.nll_loss
+        return mse_loss_nan if data.is_reg else F.binary_cross_entropy if data.is_multi else F.nll_loss
 
     def predict_array(self,x_cat,x_cont):
         self.model.eval()
         return to_np(self.model(to_gpu(V(T(x_cat))),to_gpu(V(T(x_cont)))))
 
     def summary(self):
-        x = [torch.ones(3, self.data.trn_ds.cats.shape[1]).long(), torch.rand(3, self.data.trn_ds.conts.shape[1])]
+        x = [torch.ones(1, 3, self.data.trn_ds.cats.shape[1]).long(), torch.rand(1, 3, self.data.trn_ds.conts.shape[1])]
         return model_summary(self.model, x)
 
 
