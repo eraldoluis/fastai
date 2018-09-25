@@ -186,7 +186,7 @@ md = ColumnarSeqModelData.from_data_frames(path,  # path for data saving
                                            y_train_dum.astype(np.float32),  # output variable for the training set
                                            seqs_val_dum,  # limits of validation sequences
                                            df_val_dum,  # validation set
-                                           y_val_dum,  # output variable for the validation set
+                                           y_val_dum.astype(np.float32),  # output variable for the validation set
                                            cat_flds=cat_ftrs,  # categorical features
                                            is_reg=False,  # not regression
                                            is_multi=True,  # multi-label problem

@@ -6,24 +6,6 @@ from .dataset import *
 from .learner import *
 
 
-class PassthruDataset(Dataset):
-    def __init__(self, *args, is_reg=True, is_multi=False):
-        torch.FloatTensor
-        *xs, y = args
-        self.xs, self.y = xs, y
-        self.is_reg = is_reg
-        self.is_multi = is_multi
-
-    def __len__(self): return len(self.y)
-
-    def __getitem__(self, idx): return [o[idx] for o in self.xs] + [self.y[idx]]
-
-    @classmethod
-    def from_data_frame(cls, df, cols_x, col_y, is_reg=True, is_multi=False):
-        cols = [df[o] for o in cols_x + [col_y]]
-        return cls(*cols, is_reg=is_reg, is_multi=is_multi)
-
-
 class ColumnarSeqDataset(Dataset):
     def __init__(self, seqs_lim, cats, conts, y, is_reg, is_multi):
         self.seqs_lim = seqs_lim
@@ -211,7 +193,8 @@ def bce_nan(input, target):
     :param target:
     :return:
     """
-    m = torch.eq(target, -1)
+    # Mask out -1 values.
+    m = torch.eq(target, -1) ^ 1
     input = torch.masked_select(input, m)
     target = torch.masked_select(target, m)
     return F.binary_cross_entropy(input, target)
