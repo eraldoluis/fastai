@@ -5,11 +5,6 @@
 # Each group of (field, type, year_plant), where year_plant = harvest_year - age, is considered a sequence.
 
 
-import pandas as pd
-import numpy as np
-import os
-
-from datetime import datetime
 import seaborn as sns
 
 sns.set(style="whitegrid")
@@ -230,12 +225,6 @@ df_test_proc, _, nas, mapper = proc_df(df_test_ftrs, y_fld='production', do_scal
 
 n_cont = len(df_train_proc.columns) - len(cat_ftrs)
 
-# In[14]:
-
-
-df_train_proc.head(2)
-
-# In[ ]:
 
 
 # df_train_proc = df_val_proc
@@ -290,8 +279,8 @@ learner_params = {
     "n_cont": n_cont,  # num continuous inputs
     "emb_drop": dr,  # embeddings dropout probability
     "out_sz": 1,  # output size
-    "szs": [300],  # sizes of fully-connected layers
-    "drops": [dr],  # dropout probabilities after each FC layer
+    "szs": [300, 100],  # sizes of fully-connected layers
+    "drops": [dr, dr],  # dropout probabilities after each FC layer
     "lstm_hidden_size": 100,  # size of the LSTM hidden states
     "lstm_num_layers": 2,  # number of LSTM layers
     "lstm_dropout": dr,  # LSTM dropout
