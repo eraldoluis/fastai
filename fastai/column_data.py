@@ -131,7 +131,7 @@ class MixedInputModel(nn.Module):
             else:
                 x = F.log_softmax(x)
         elif self.y_range:
-            x = F.sigmoid(x)
+            x = torch.sigmoid(x)
             x = x*(self.y_range[1] - self.y_range[0])
             x = x+self.y_range[0]
         return x
