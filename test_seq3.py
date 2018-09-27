@@ -137,15 +137,10 @@ df_val_ftrs = df_all_ftrs.iloc[len_train:].copy()
 # In[11]:
 
 
-def get_dummies(df, seq_lim):
-    cols = ['field', 'age', 'type', 'harvest_month']
-
-    # Create dummy values for categorical features.
-    y = pd.get_dummies(df.loc[:, cols], columns=cols)
-
-    dfs = []
-    ys = []
-    seqs_lim = []
+def gen_splits(cols, df, y, seqs):
+    df_splits = []
+    y_splits = []
+    seq_splits = []
 
     idx_offset = 0
 
@@ -155,29 +150,44 @@ def get_dummies(df, seq_lim):
         # Remove categorical feature value for this split.
         df_col[col] = 0
         # Add to list of splits.
-        dfs.append(df_col)
+        df_splits.append(df_col)
         # Copy the output variables.
-        ys.append(y.copy())
+        y_splits.append(y.copy())
 
         # Copy the sequences (add the index offset).
-        seqs_lim += [s + idx_offset for s in seq_lim]
+        seq_splits += [s + idx_offset for s in seqs]
 
         idx_offset += len(df_col)
 
     # Concatenate all splits.
-    y = pd.concat(ys)
-    df = pd.concat(dfs)
+    y = pd.concat(y_splits)
+    df = pd.concat(df_splits)
 
-    return df, y, seqs_lim
+    return df, y, seq_splits
+
+
+def get_dummies(df_train_, seq_train, df_val_, seq_val):
+    cols = ['field', 'age', 'type', 'harvest_month']
+
+    df = pd.concat([df_train_, df_val_])
+
+    # Create dummy values for categorical features.
+    y = pd.get_dummies(df.loc[:, cols], columns=cols)
+
+    y_train = y[:len(df_train_)]
+    y_val = y[len(df_train_):]
+
+    df_train_, y_train, seq_train = gen_splits(cols, df_train_, y_train, seq_train)
+    df_val_, y_val, seq_val = gen_splits(cols, df_val_, y_val, seq_val)
+
+    return df_train_, y_train, seq_train, df_val_, y_val, seq_val
 
 
 # In[12]:
 
 
-df_train_dum, y_train_dum, seqs_train_dum = get_dummies(df_train_ftrs, seqs_train)
-df_val_dum, y_val_dum, seqs_val_dum = get_dummies(df_val_ftrs, seqs_val)
-
-# In[14]:
+df_train_dum, y_train_dum, seqs_train_dum, df_val_dum, y_val_dum, seqs_val_dum = \
+    get_dummies(df_train_ftrs, seqs_train, df_val_ftrs, seqs_val)
 
 
 md = ColumnarSeqModelData.from_data_frames(path,  # path for data saving
